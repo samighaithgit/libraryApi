@@ -1,9 +1,13 @@
-import { Controller,Get, Param,Query,Post, Body, Patch, Delete} from '@nestjs/common';
+import { Controller,Get, Param,Query,Post, Body, Patch, Delete, ParseIntPipe, UsePipes, ValidationPipe} from '@nestjs/common';
 import { BooksService } from './books.service';
 import  { CreateBooks } from './books_create.dto';
 import  { UpdateBook } from './books_updatebook.dot';
 
 @Controller('books')
+@UsePipes(new ValidationPipe ({
+  whitelist: true ,
+  forbidNonWhitelisted:true
+}))
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
@@ -37,6 +41,10 @@ ChangePrice(
 }
 
 @Post('addbook')
+@UsePipes( new ValidationPipe({
+  whitelist: true,
+  forbidNonWhitelisted: true
+}))
 addnewbook(@Body()body:CreateBooks)
 {
 return this.booksService.addbook(body);
@@ -62,9 +70,9 @@ returnallbook()
 
 @Patch("updatebook/:id")
 updatebook(
-  @Param('id')id: string ,
+  @Param('id',ParseIntPipe)id: number ,
   @Body()body:UpdateBook)
             {
-  return this.booksService.updatebook(Number(id),body);
+  return this.booksService.updatebook(id,body);
             }
 }
