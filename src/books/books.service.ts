@@ -1,8 +1,37 @@
 import { Injectable } from '@nestjs/common';
-import type { UpdateBook } from './books_updatebook.dot';
+import  { UpdateBook } from './books_updatebook.dot';
+import { InjectRepository } from '@nestjs/typeorm';
+import  { Book } from './books.entits';
+import type { Repository } from 'typeorm/browser';
 
 @Injectable()
 export class BooksService {
+constructor(
+@InjectRepository(Book)
+private readonly bookrepository:Repository<Book>
+){
+}
+
+
+async listarray()
+{
+    return await this.bookrepository.find();
+}
+
+addbook(body:any)
+{
+    const newbook =this.bookrepository.create({
+       
+        name:body.name,
+        type:body.type,
+        price:body.price
+    })
+    return this.bookrepository.save(newbook);
+}
+
+
+
+
 private books =[
     {
         id:1,
@@ -74,17 +103,7 @@ change_price(id:number,newprice:number)
      return this.books[id];
 }
 
-addbook(body:any)
-{
-    const newbook ={
-        id:this.books.length+1,
-        name:body.name,
-        type:body.type,
-        price:body.price
-    }
-    this.books.push(newbook);
-    return this.books;
-}
+
 
 filterbyprice(minpri:number,maxpri:number)
 {
@@ -110,10 +129,7 @@ deletebook(id:number)
     const  deletedbook =this.books.splice(index,1)
     return deletedbook[0];
 }
-listarray()
-{
-    return this.books;
-}
+
 
 updatebook(id:number ,body:UpdateBook)
 {
