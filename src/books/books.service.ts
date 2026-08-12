@@ -29,7 +29,51 @@ addbook(body:any)
     return this.bookrepository.save(newbook);
 }
 
+async serachaboutbook(id:number)
+{
 
+    const book = await this.bookrepository.findOneBy({id:id});
+    if(!book){
+        return "no book with this id";
+    }
+    return book;
+
+}
+
+
+async updatebook(id:number ,body:UpdateBook)
+{
+
+const book = await this.bookrepository.findOneBy({id:id});
+ 
+if(!book){
+    return "no book with this id";
+}
+if(body.name)
+{
+    book.name = body.name;
+}
+if(body.type)
+{
+    book.type = body.type;
+}
+if(body.price !== undefined)
+{
+    book.price = body.price;
+}
+  return  this.bookrepository.save(book);
+
+
+}
+
+async deletebook(id:number)
+{
+  const result = await this.bookrepository.delete(id);
+  if(result.affected === 0){
+    return "no book with this id ";
+}
+return result;
+}
 
 
 private books =[
@@ -122,38 +166,9 @@ filterbyprice(minpri:number,maxpri:number)
     
 }
 
-deletebook(id:number)
-{
-    const index = this.books.findIndex((book) => book.id === id);
-  
-    const  deletedbook =this.books.splice(index,1)
-    return deletedbook[0];
-}
 
 
-updatebook(id:number ,body:UpdateBook)
-{
 
-const book = this.books.find((book)=>book.id === id);
- 
-if(!book){
-    return "no book with this id";
-}
-if(body.name)
-{
-    book.name = body.name;
-}
-if(body.type)
-{
-    book.type = body.type;
-}
-if(body.price !== undefined)
-{
-    book.price = body.price;
-}
-return book;
-
-}
 
 
 }

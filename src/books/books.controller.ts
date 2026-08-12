@@ -75,4 +75,11 @@ updatebook(
             {
   return this.booksService.updatebook(id,body);
             }
+
+
+
+@Get("serachaboutbook/:id")
+searchaboutbook(@Param('id',ParseIntPipe)id:number){
+  return this.booksService.serachaboutbook(id)
+}
 }
