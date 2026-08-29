@@ -11,13 +11,14 @@ import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { RefreshTokenDto } from './dto/refresh-token.dto';
-
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class AuthService {
 
   constructor(
     private readonly usersService: UsersService,
       private readonly jwtService: JwtService,
+      private readonly configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -92,8 +93,10 @@ export class AuthService {
     await this.jwtService.signAsync(
       payload,
       {
-        secret: 'refresh-secret-key',
-        expiresIn: '7d',
+       secret: this.configService.getOrThrow<string>( 
+        'JWT_REFRESH_SECRET',
+      ),
+      expiresIn: '7d',
       },
     );
 
