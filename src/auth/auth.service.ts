@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 import * as bcrypt from 'bcrypt';
 
@@ -18,6 +19,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
       private readonly jwtService: JwtService,
+      private readonly configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -92,7 +94,7 @@ export class AuthService {
     await this.jwtService.signAsync(
       payload,
       {
-        secret: 'refresh-secret-key',
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         expiresIn: '7d',
       },
     );
@@ -118,7 +120,7 @@ async refresh(dto: RefreshTokenDto) {
       await this.jwtService.verifyAsync(
         dto.refreshToken,
         {
-          secret: 'refresh-secret-key',
+          secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         },
       );
 
