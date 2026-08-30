@@ -2,6 +2,8 @@ import { Controller,Get, Param,Query,Post, Body, Patch, Delete, ParseIntPipe, Us
 import { BooksService } from './books.service';
 import  { CreateBooks } from './books_create.dto';
 import  { UpdateBook } from './books_updatebook.dot';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('books')
 @UsePipes(new ValidationPipe ({
@@ -17,7 +19,7 @@ search(@Param('value')value: string)
 {
   return this.booksService.search(value);
 }
-
+@UseGuards(JwtAuthGuard)
 @Get("getbook")
 findbook(@Query("name") name : string){
   return this.booksService.getbook(name);
@@ -49,6 +51,7 @@ addnewbook(@Body()body:CreateBooks)
 {
 return this.booksService.addbook(body);
 }
+
 
 @Get('fliterbyprice')
 filterbyprice(@Query('min')min: string ,@Query('max')max: string)

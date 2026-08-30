@@ -6,11 +6,16 @@ import {TypeOrmModule} from '@nestjs/typeorm';
 import { Book } from './books/books.entits';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
+
 
 @Module({
-  imports:
   
-   [TypeOrmModule.forRoot({
+  imports:[
+     ConfigModule.forRoot({
+      isGlobal: true, // يخليها متاحة بكل المشروع بدون ما تستوردي بكل موديول
+    }),
+   TypeOrmModule.forRoot({
     type:'postgres',
     host:'localhost',
     port:5432,
