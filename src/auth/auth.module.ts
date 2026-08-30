@@ -23,7 +23,7 @@ import { JwtAccessGuard } from './jwt-access.guard';
 
   controllers: [AuthController,],
   providers: [AuthService,JwtAccessGuard],
-   exports: [JwtAccessGuard],
+  exports: [JwtAccessGuard],
 
 
 })
