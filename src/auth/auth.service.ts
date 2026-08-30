@@ -3,31 +3,33 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 import * as bcrypt from 'bcrypt';
 
 import { UsersService } from '../users/users.service';
+
 import { RegisterDto } from './dto/register.dto';
 import type { LoginDto } from './dto/login.dto';
 import type { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
-
   constructor(
     private readonly usersService: UsersService,
-      private readonly jwtService: JwtService,
-  ) {}
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) { }
 
   async register(dto: RegisterDto) {
-
     const existingUser =
       await this.usersService.findByEmail(dto.email);
 
     if (existingUser) {
       throw new ConflictException(
-        'Email already registered'
+        'Email already registered',
       );
     }
 
@@ -46,112 +48,101 @@ export class AuthService {
     };
   }
 
-
-
-
-
-  
-
   async login(dto: LoginDto) {
-
-  const user =
-    await this.usersService.findByEmail(dto.email);
-
-  if (!user) {
-    throw new UnauthorizedException(
-      'Invalid email or password'
-    );
-  }
-
-  const passwordIsCorrect =
-    await bcrypt.compare(
-      dto.password,
-      user. hashedpassword,
-    );
-
-  if (!passwordIsCorrect) {
-    throw new UnauthorizedException(
-      'Invalid email or password' 
-    );
-  }
-
-  const payload = {
-    sub: user.id,
-    email: user.email,
-  };
-
-  const accessToken =
-    await this.jwtService.signAsync(
-      payload,
-      {
-        expiresIn: '15m',
-      },
-    );
-
-  const refreshToken =
-    await this.jwtService.signAsync(
-      payload,
-      {
-        secret: 'refresh-secret-key',
-        expiresIn: '7d',
-      },
-    );
-
-  return {
-    accessToken,
-    refreshToken,
-  };
-}
-
-
-
-
-
-
-
-
-async refresh(dto: RefreshTokenDto) {
-
-  try {
-
-    const payload =
-      await this.jwtService.verifyAsync(
-        dto.refreshToken,
-        {
-          secret: 'refresh-secret-key',
-        },
-      );
-
     const user =
-      await this.usersService.findById(
-        payload.sub
-      );
+      await this.usersService.findByEmail(dto.email);
 
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'Invalid email or password',
+      );
     }
 
+    const passwordIsCorrect =
+      await bcrypt.compare(
+        dto.password,
+        user.hashedpassword,
+      );
+
+    if (!passwordIsCorrect) {
+      throw new UnauthorizedException(
+        'Invalid email or password',
+      );
+    }
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+    };
+
+    // Access Token
     const accessToken =
       await this.jwtService.signAsync(
-        {
-          sub: user.id,
-          email: user.email,
-        },
+        payload,
         {
           expiresIn: '15m',
         },
       );
 
+    // Refresh Token
+    const refreshToken =
+      await this.jwtService.signAsync(
+        payload,
+        {
+          secret: this.configService.get<string>(
+            'JWT_REFRESH_SECRET',
+          ),
+          expiresIn: '7d',
+        },
+      );
+
     return {
       accessToken,
+      refreshToken,
     };
-
-  } catch {
-
-    throw new UnauthorizedException(
-      'Invalid or expired refresh token'
-    );
   }
-}
 
+  async refresh(dto: RefreshTokenDto) {
+    try {
+      // Verify Refresh Token
+      const payload =
+        await this.jwtService.verifyAsync(
+          dto.refreshToken,
+          {
+            secret: this.configService.get<string>(
+              'JWT_REFRESH_SECRET',
+            ),
+          },
+        );
+
+      const user =
+        await this.usersService.findById(
+          payload.sub,
+        );
+
+      if (!user) {
+        throw new UnauthorizedException();
+      }
+
+      // Generate new Access Token
+      const accessToken =
+        await this.jwtService.signAsync(
+          {
+            sub: user.id,
+            email: user.email,
+          },
+          {
+            expiresIn: '15m',
+          },
+        );
+
+      return {
+        accessToken,
+      };
+    } catch {
+      throw new UnauthorizedException(
+        'Invalid or expired refresh token',
+      );
+    }
+  }
 }
